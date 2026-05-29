@@ -52,42 +52,100 @@
                     <button id="addTransactionBtn" class="primary">➕ Добавить операцию</button>
                 </div>
 
-                <!-- Коммунальные платежи -->
+                <!-- Коммунальные платежи с кнопкой сброса -->
                 <div class="card">
-                    <div class="card-title">💡 Коммунальные платежи (расчёт)</div>
+                    <div class="card-title">💡 Коммунальные платежи
+                        <span style="font-size:0.7rem; font-weight:normal;">(расчёт по счётчикам)</span>
+                    </div>
+
+                    <!-- Подсказка для пользователя -->
+                    <div class="info-hint">
+                        💡 <strong>Как пользоваться:</strong> введите <strong>текущие</strong> показания и
+                        <strong>предыдущие</strong> (за прошлый месяц).
+                        Разница умножится на тариф. После оплаты нажмите «Сбросить показания» → текущие станут
+                        предыдущими.
+                    </div>
+
                     <div class="service-block">
-                        <div class="service-header">🚰 Холодная вода</div>
-                        <input type="number" id="coldWaterCurrent" step="0.1" placeholder="Текущие показания">
-                        <input type="number" id="coldWaterPrev" step="0.1" placeholder="Предыдущие показания">
-                        <input type="number" id="coldTariff" step="0.01" placeholder="Тариф" value="28.61">
+                        <div class="service-header">🚰 Холодная вода (ХВС)</div>
+                        <div class="input-group">
+                            <input type="number" id="coldWaterCurrent" step="0.1" placeholder="Текущие показания, м³">
+                            <span class="input-hint">текущий месяц</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="number" id="coldWaterPrev" step="0.1" placeholder="Предыдущие показания, м³">
+                            <span class="input-hint">прошлый месяц</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="number" id="coldTariff" step="0.01" placeholder="Тариф, ₽/м³" value="28.61">
+                            <span class="input-hint">можно изменить</span>
+                        </div>
                         <div class="calc-result" id="coldResult">0 ₽</div>
                     </div>
+
                     <div class="service-block">
-                        <div class="service-header">🔥 Горячая вода</div>
-                        <input type="number" id="hotWaterCurrent" step="0.1" placeholder="Текущие показания">
-                        <input type="number" id="hotWaterPrev" step="0.1" placeholder="Предыдущие показания">
-                        <input type="number" id="hotTariff" step="0.01" placeholder="Тариф" value="28.61">
+                        <div class="service-header">🔥 Горячая вода (ГВС)</div>
+                        <div class="input-group">
+                            <input type="number" id="hotWaterCurrent" step="0.1" placeholder="Текущие показания, м³">
+                            <span class="input-hint">текущий месяц</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="number" id="hotWaterPrev" step="0.1" placeholder="Предыдущие показания, м³">
+                            <span class="input-hint">прошлый месяц</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="number" id="hotTariff" step="0.01" placeholder="Тариф, ₽/м³" value="98.2">
+                            <span class="input-hint">можно изменить</span>
+                        </div>
                         <div class="calc-result" id="hotResult">0 ₽</div>
                     </div>
+
                     <div class="service-block">
                         <div class="service-header">⚡ Электричество</div>
-                        <input type="number" id="elecCurrent" step="1" placeholder="Текущие показания">
-                        <input type="number" id="elecPrev" step="1" placeholder="Предыдущие показания">
-                        <input type="number" id="elecTariff" step="0.01" placeholder="Тариф" value="4.18">
+                        <div class="input-group">
+                            <input type="number" id="elecCurrent" step="1" placeholder="Текущие показания, кВт·ч">
+                            <span class="input-hint">текущий месяц</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="number" id="elecPrev" step="1" placeholder="Предыдущие показания, кВт·ч">
+                            <span class="input-hint">прошлый месяц</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="number" id="elecTariff" step="0.01" placeholder="Тариф, ₽/кВт·ч" value="4.18">
+                            <span class="input-hint">можно изменить</span>
+                        </div>
                         <div class="calc-result" id="elecResult">0 ₽</div>
                     </div>
+
                     <div class="service-block">
-                        <div class="service-header">💧 Водоотведение</div>
-                        <input type="number" id="drainVolume" step="0.1" placeholder="Объём (авто)" readonly
-                            style="background:#f4f7fa;">
-                        <input type="number" id="drainTariff" step="0.01" placeholder="Тариф" value="24.14">
+                        <div class="service-header">💧 Водоотведение (канализация)</div>
+                        <div class="input-group">
+                            <input type="number" id="drainVolume" step="0.1" placeholder="Объём водоотведения" readonly
+                                style="background:#f4f7fa;">
+                            <span class="input-hint">ХВС + ГВС (авто)</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="number" id="drainTariff" step="0.01" placeholder="Тариф, ₽/м³" value="24.14">
+                            <span class="input-hint">можно изменить</span>
+                        </div>
                         <div class="calc-result" id="drainResult">0 ₽</div>
                     </div>
+
                     <div class="total-utilities" id="totalUtilities">
-                        <strong>💰 Итого коммуналка:</strong> <span id="totalUtilitiesAmount">0 ₽</span>
+                        <strong>💰 Итого коммунальные платежи:</strong> <span id="totalUtilitiesAmount">0 ₽</span>
                     </div>
-                    <button id="addUtilitiesExpenseBtn" class="primary" style="background: #4a6f7c;">➕ Добавить расход
-                        (коммуналка)</button>
+
+                    <!-- Кнопки действий -->
+                    <div style="display: flex; gap: 12px; margin-top: 16px;">
+                        <button id="addUtilitiesExpenseBtn" class="primary"
+                            style="background: #4a6f7c; margin:0; flex:1;">➕ Добавить расход (коммуналка)</button>
+                        <button id="resetReadingsBtn" class="secondary"
+                            style="background: #e67e22; margin:0; flex:1; border:none; color:white;">🔄 Сбросить
+                            показания</button>
+                    </div>
+                    <div style="font-size: 0.7rem; color: #6c8d9c; margin-top: 12px; text-align: center;">
+                        «Сбросить показания» — текущие показатели станут предыдущими для следующего месяца
+                    </div>
                 </div>
             </div>
 
@@ -100,7 +158,7 @@
             </div>
         </div>
         <div class="footer-note">
-            ✨ Кликните ✏️ для корректировки любого платежа: можно изменить сумму, тип, счёт и описание
+            ✨ Кликните ✏️ для корректировки любого платежа. После оплаты коммуналки используйте «Сбросить показания».
         </div>
     </div>
 

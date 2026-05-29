@@ -1,8 +1,8 @@
-// script.js - полная логика с редактированием транзакций
+// script.js - обновлён с функцией сброса показаний
 
 let accounts = [];
 let transactions = [];
-let editingTransactionId = null; // ID редактируемой транзакции
+let editingTransactionId = null;
 
 // DOM элементы
 const accountSelect = document.getElementById('accountSelect');
@@ -16,15 +16,25 @@ const newAccountNameInput = document.getElementById('newAccountName');
 const incomeTypeBtn = document.getElementById('incomeTypeBtn');
 const expenseTypeBtn = document.getElementById('expenseTypeBtn');
 
-// Модальное окно
-const modal = document.getElementById('editModal');
-const editAmount = document.getElementById('editAmount');
-const editType = document.getElementById('editType');
-const editAccountId = document.getElementById('editAccountId');
-const editDescription = document.getElementById('editDescription');
-const saveEditBtn = document.getElementById('saveEditBtn');
-const cancelEditBtn = document.getElementById('cancelEditBtn');
-const modalClose = document.querySelector('.modal-close');
+// Коммунальные поля
+const coldCurrent = document.getElementById('coldWaterCurrent');
+const coldPrev = document.getElementById('coldWaterPrev');
+const coldTariff = document.getElementById('coldTariff');
+const coldResult = document.getElementById('coldResult');
+const hotCurrent = document.getElementById('hotWaterCurrent');
+const hotPrev = document.getElementById('hotWaterPrev');
+const hotTariff = document.getElementById('hotTariff');
+const hotResult = document.getElementById('hotResult');
+const elecCurrent = document.getElementById('elecCurrent');
+const elecPrev = document.getElementById('elecPrev');
+const elecTariff = document.getElementById('elecTariff');
+const elecResult = document.getElementById('elecResult');
+const drainVolume = document.getElementById('drainVolume');
+const drainTariff = document.getElementById('drainTariff');
+const drainResult = document.getElementById('drainResult');
+const totalUtilitiesSpan = document.getElementById('totalUtilitiesAmount');
+const addUtilitiesBtn = document.getElementById('addUtilitiesExpenseBtn');
+const resetReadingsBtn = document.getElementById('resetReadingsBtn');
 
 let currentType = true;
 
@@ -32,6 +42,7 @@ let currentType = true;
 function saveData() {
     localStorage.setItem('fin_accounts', JSON.stringify(accounts));
     localStorage.setItem('fin_transactions', JSON.stringify(transactions));
+    saveUtilitiesState(); // Сохраняем показания
 }
 
 function loadData() {
@@ -48,8 +59,92 @@ function loadData() {
         { id: 't2', type: 'expense', amount: 520, accountId: 'acc1', description: 'Продукты', dateISO: new Date(Date.now() - 86400000).toISOString() },
         { id: 't3', type: 'expense', amount: 890, accountId: 'acc2', description: 'Кафе', dateISO: new Date().toISOString() }
     ];
+    loadUtilitiesState(); // Загружаем сохранённые показания
     recalcAllBalances();
     saveData();
+}
+
+// Сохранение показаний счётчиков в localStorage
+function saveUtilitiesState() {
+    const utilitiesState = {
+        coldCurrent: coldCurrent.value,
+        coldPrev: coldPrev.value,
+        coldTariff: coldTariff.value,
+        hotCurrent: hotCurrent.value,
+        hotPrev: hotPrev.value,
+        hotTariff: hotTariff.value,
+        elecCurrent: elecCurrent.value,
+        elecPrev: elecPrev.value,
+        elecTariff: elecTariff.value,
+        drainTariff: drainTariff.value
+    };
+    localStorage.setItem('utilities_state', JSON.stringify(utilitiesState));
+}
+
+function loadUtilitiesState() {
+    const saved = localStorage.getItem('utilities_state');
+    if (saved) {
+        const state = JSON.parse(saved);
+        if (state.coldCurrent) coldCurrent.value = state.coldCurrent;
+        if (state.coldPrev) coldPrev.value = state.coldPrev;
+        if (state.coldTariff) coldTariff.value = state.coldTariff;
+        if (state.hotCurrent) hotCurrent.value = state.hotCurrent;
+        if (state.hotPrev) hotPrev.value = state.hotPrev;
+        if (state.hotTariff) hotTariff.value = state.hotTariff;
+        if (state.elecCurrent) elecCurrent.value = state.elecCurrent;
+        if (state.elecPrev) elecPrev.value = state.elecPrev;
+        if (state.elecTariff) elecTariff.value = state.elecTariff;
+        if (state.drainTariff) drainTariff.value = state.drainTariff;
+    } else {
+        // Значения по умолчанию для демо
+        coldCurrent.value = '';
+        coldPrev.value = '';
+        coldTariff.value = '35.4';
+        hotCurrent.value = '';
+        hotPrev.value = '';
+        hotTariff.value = '98.2';
+        elecCurrent.value = '';
+        elecPrev.value = '';
+        elecTariff.value = '5.8';
+        drainTariff.value = '23.7';
+    }
+}
+
+// Сброс показаний: текущие показатели становятся предыдущими
+function resetReadings() {
+    if (confirm('🔄 Сбросить показания?\n\nТекущие показатели станут предыдущими (для следующего месяца).\nПоля ввода текущих показаний очистятся.')) {
+        // Холодная вода
+        if (coldCurrent.value && !isNaN(parseFloat(coldCurrent.value))) {
+            coldPrev.value = coldCurrent.value;
+            coldCurrent.value = '';
+        }
+        // Горячая вода
+        if (hotCurrent.value && !isNaN(parseFloat(hotCurrent.value))) {
+            hotPrev.value = hotCurrent.value;
+            hotCurrent.value = '';
+        }
+        // Электричество
+        if (elecCurrent.value && !isNaN(parseFloat(elecCurrent.value))) {
+            elecPrev.value = elecCurrent.value;
+            elecCurrent.value = '';
+        }
+
+        calculateUtilities();
+        saveUtilitiesState();
+
+        // Показываем сообщение об успехе
+        const totalSpan = document.getElementById('totalUtilitiesAmount');
+        const originalText = totalSpan.innerText;
+        totalSpan.style.background = '#dff0e6';
+        totalSpan.style.padding = '4px 12px';
+        totalSpan.style.borderRadius = '20px';
+        setTimeout(() => {
+            totalSpan.style.background = '';
+            totalSpan.style.padding = '';
+        }, 800);
+
+        alert('✅ Показания сброшены!\n\nТеперь предыдущие показатели = бывшие текущие.\nВведите новые текущие показания в следующем месяце.');
+    }
 }
 
 function recalcAllBalances() {
@@ -86,16 +181,13 @@ function addTransaction(amount, typeStr, accountId, description) {
 function updateTransaction(txId, newAmount, newType, newAccountId, newDescription) {
     const txIndex = transactions.findIndex(t => t.id === txId);
     if (txIndex === -1) return false;
-
     transactions[txIndex] = {
         ...transactions[txIndex],
         amount: newAmount,
         type: newType,
         accountId: newAccountId,
-        description: newDescription || (newType === 'income' ? 'Доход' : 'Расход'),
-        dateISO: transactions[txIndex].dateISO // сохраняем исходную дату
+        description: newDescription || (newType === 'income' ? 'Доход' : 'Расход')
     };
-
     recalcAllBalances();
     saveData();
     refreshUI();
@@ -135,86 +227,7 @@ function addNewAccount() {
     newAccountNameInput.value = '';
 }
 
-// ---------- Редактирование (открытие модалки) ----------
-function openEditModal(txId) {
-    const transaction = transactions.find(t => t.id === txId);
-    if (!transaction) return;
-
-    editingTransactionId = txId;
-    editAmount.value = transaction.amount;
-    editType.value = transaction.type;
-    editDescription.value = transaction.description || '';
-
-    // Заполняем select счетов
-    renderEditAccountSelect(transaction.accountId);
-
-    modal.style.display = 'block';
-}
-
-function renderEditAccountSelect(selectedAccountId) {
-    editAccountId.innerHTML = '';
-    accounts.forEach(acc => {
-        const option = document.createElement('option');
-        option.value = acc.id;
-        option.textContent = `${acc.name} (остаток: ${acc.balance.toFixed(2)} ₽)`;
-        if (acc.id === selectedAccountId) option.selected = true;
-        editAccountId.appendChild(option);
-    });
-    if (accounts.length === 0) {
-        const option = document.createElement('option');
-        option.text = 'Нет доступных счетов';
-        option.disabled = true;
-        editAccountId.appendChild(option);
-    }
-}
-
-function closeModal() {
-    modal.style.display = 'none';
-    editingTransactionId = null;
-}
-
-function saveEdit() {
-    if (!editingTransactionId) return;
-
-    let newAmount = parseFloat(editAmount.value);
-    if (isNaN(newAmount) || newAmount <= 0) {
-        alert('Введите корректную сумму (больше нуля)');
-        return;
-    }
-
-    const newType = editType.value;
-    const newAccountId = editAccountId.value;
-    if (!newAccountId || accounts.findIndex(a => a.id === newAccountId) === -1) {
-        alert('Выберите существующий счёт');
-        return;
-    }
-
-    let newDescription = editDescription.value.trim();
-    if (newDescription === '') newDescription = newType === 'income' ? 'Доход' : 'Расход';
-
-    updateTransaction(editingTransactionId, newAmount, newType, newAccountId, newDescription);
-    closeModal();
-}
-
-// ---------- Коммунальные платежи ----------
-const coldCurrent = document.getElementById('coldWaterCurrent');
-const coldPrev = document.getElementById('coldWaterPrev');
-const coldTariff = document.getElementById('coldTariff');
-const coldResult = document.getElementById('coldResult');
-const hotCurrent = document.getElementById('hotWaterCurrent');
-const hotPrev = document.getElementById('hotWaterPrev');
-const hotTariff = document.getElementById('hotTariff');
-const hotResult = document.getElementById('hotResult');
-const elecCurrent = document.getElementById('elecCurrent');
-const elecPrev = document.getElementById('elecPrev');
-const elecTariff = document.getElementById('elecTariff');
-const elecResult = document.getElementById('elecResult');
-const drainVolume = document.getElementById('drainVolume');
-const drainTariff = document.getElementById('drainTariff');
-const drainResult = document.getElementById('drainResult');
-const totalUtilitiesSpan = document.getElementById('totalUtilitiesAmount');
-const addUtilitiesBtn = document.getElementById('addUtilitiesExpenseBtn');
-
+// ---------- Расчёт коммуналки ----------
 function calculateUtilities() {
     let coldCurr = parseFloat(coldCurrent.value) || 0;
     let coldPrevVal = parseFloat(coldPrev.value) || 0;
@@ -245,6 +258,7 @@ function calculateUtilities() {
 
     let total = coldSum + hotSum + elecSum + drainSum;
     totalUtilitiesSpan.innerText = total.toFixed(2) + ' ₽';
+    saveUtilitiesState();
     return total;
 }
 
@@ -260,17 +274,41 @@ function addUtilitiesAsExpense() {
     }
     const total = calculateUtilities();
     if (total <= 0.01) {
-        alert('Сумма к оплате равна 0. Проверьте показания');
+        alert('Сумма к оплате равна 0. Проверьте показания (текущие должны быть больше предыдущих)');
         return;
     }
     if (confirm(`Добавить расход ${total.toFixed(2)} ₽ (коммуналка) на счёт "${accounts.find(a => a.id === selectedAccountId)?.name}"?`)) {
         addTransaction(total, 'expense', selectedAccountId, `Коммунальные платежи (вода, эл-во, водоотведение)`);
-        if (confirm('Обновить предыдущие показатели текущими для следующего месяца?')) {
-            coldPrev.value = coldCurrent.value;
-            hotPrev.value = hotCurrent.value;
-            elecPrev.value = elecCurrent.value;
-            calculateUtilities();
-        }
+        alert(`✅ Расход ${total.toFixed(2)} ₽ добавлен!\n\nНе забудьте нажать «Сбросить показания» для подготовки к следующему месяцу.`);
+    }
+}
+
+// ---------- Редактирование ----------
+function openEditModal(txId) {
+    const transaction = transactions.find(t => t.id === txId);
+    if (!transaction) return;
+    editingTransactionId = txId;
+    editAmount.value = transaction.amount;
+    editType.value = transaction.type;
+    editDescription.value = transaction.description || '';
+    renderEditAccountSelect(transaction.accountId);
+    modal.style.display = 'block';
+}
+
+function renderEditAccountSelect(selectedAccountId) {
+    editAccountId.innerHTML = '';
+    accounts.forEach(acc => {
+        const option = document.createElement('option');
+        option.value = acc.id;
+        option.textContent = `${acc.name} (${acc.balance.toFixed(2)} ₽)`;
+        if (acc.id === selectedAccountId) option.selected = true;
+        editAccountId.appendChild(option);
+    });
+    if (accounts.length === 0) {
+        const option = document.createElement('option');
+        option.text = 'Нет доступных счетов';
+        option.disabled = true;
+        editAccountId.appendChild(option);
     }
 }
 
@@ -344,7 +382,6 @@ function renderTransactionsList() {
         const typeClass = tx.type === 'income' ? 'transaction-income' : 'transaction-expense';
         const dateObj = new Date(tx.dateISO);
         const localDate = dateObj.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-
         html += `
             <div class="transaction-item ${typeClass}">
                 <div class="transaction-info">
@@ -365,18 +402,11 @@ function renderTransactionsList() {
         `;
     });
     transactionsContainer.innerHTML = html;
-
     document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openEditModal(btn.getAttribute('data-id'));
-        });
+        btn.addEventListener('click', (e) => openEditModal(btn.getAttribute('data-id')));
     });
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteTransactionById(btn.getAttribute('data-id'));
-        });
+        btn.addEventListener('click', (e) => deleteTransactionById(btn.getAttribute('data-id')));
     });
 }
 
@@ -409,6 +439,40 @@ function handleAddTransaction() {
     descriptionInput.value = '';
 }
 
+// Модальное окно
+const modal = document.getElementById('editModal');
+const editAmount = document.getElementById('editAmount');
+const editType = document.getElementById('editType');
+const editAccountId = document.getElementById('editAccountId');
+const editDescription = document.getElementById('editDescription');
+const saveEditBtn = document.getElementById('saveEditBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+const modalClose = document.querySelector('.modal-close');
+
+function closeModal() {
+    modal.style.display = 'none';
+    editingTransactionId = null;
+}
+
+function saveEdit() {
+    if (!editingTransactionId) return;
+    let newAmount = parseFloat(editAmount.value);
+    if (isNaN(newAmount) || newAmount <= 0) {
+        alert('Введите корректную сумму (больше нуля)');
+        return;
+    }
+    const newType = editType.value;
+    const newAccountId = editAccountId.value;
+    if (!newAccountId || accounts.findIndex(a => a.id === newAccountId) === -1) {
+        alert('Выберите существующий счёт');
+        return;
+    }
+    let newDescription = editDescription.value.trim();
+    if (newDescription === '') newDescription = newType === 'income' ? 'Доход' : 'Расход';
+    updateTransaction(editingTransactionId, newAmount, newType, newAccountId, newDescription);
+    closeModal();
+}
+
 // Инициализация
 function init() {
     loadData();
@@ -420,8 +484,8 @@ function init() {
     incomeTypeBtn.addEventListener('click', () => setActiveType(true));
     expenseTypeBtn.addEventListener('click', () => setActiveType(false));
     addUtilitiesBtn.addEventListener('click', addUtilitiesAsExpense);
+    resetReadingsBtn.addEventListener('click', resetReadings);
 
-    // Закрытие модального окна
     modalClose.addEventListener('click', closeModal);
     cancelEditBtn.addEventListener('click', closeModal);
     saveEditBtn.addEventListener('click', saveEdit);

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Домашняя бухгалтерия</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <h1>💰 Домашняя бухгалтерия</h1>
+        <div class="sub">Учёт доходов/расходов и коммунальных платежей</div>
+
+        <div class="dashboard">
+            <div class="left-panel">
+                <!-- Управление счетами -->
+                <div class="card">
+                    <div class="card-title">🏦 Мои счета</div>
+                    <div class="form-row" style="flex-direction: row; gap: 10px;">
+                        <input type="text" id="newAccountName" placeholder="Название счёта" style="flex:2;">
+                        <button id="addAccountBtn"
+                            style="flex:1; background:#eef3fa; border:1px solid #cbdae4; border-radius: 40px;">➕
+                            Создать</button>
+                    </div>
+                    <div id="accountsBalanceList" class="balance-list"></div>
+                </div>
+
+                <!-- Форма добавления транзакции -->
+                <div class="card">
+                    <div class="card-title">📝 Новая операция</div>
+                    <div class="form-row">
+                        <label>💰 Сумма (₽)</label>
+                        <input type="number" id="amountInput" placeholder="например, 1500" step="any" value="">
+                    </div>
+                    <div class="form-row">
+                        <label>📌 Тип</label>
+                        <div class="type-buttons">
+                            <button type="button" id="incomeTypeBtn" class="type-btn active-income">📈 Доход</button>
+                            <button type="button" id="expenseTypeBtn" class="type-btn">📉 Расход</button>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label>🏦 Счёт</label>
+                        <select id="accountSelect"></select>
+                    </div>
+                    <div class="form-row">
+                        <label>📝 Описание</label>
+                        <input type="text" id="descriptionInput" placeholder="продукты, зарплата...">
+                    </div>
+                    <button id="addTransactionBtn" class="primary">➕ Добавить операцию</button>
+                </div>
+
+                <!-- Коммунальные платежи -->
+                <div class="card">
+                    <div class="card-title">💡 Коммунальные платежи (расчёт)</div>
+                    <div class="service-block">
+                        <div class="service-header">🚰 Холодная вода</div>
+                        <input type="number" id="coldWaterCurrent" step="0.1" placeholder="Текущие показания">
+                        <input type="number" id="coldWaterPrev" step="0.1" placeholder="Предыдущие показания">
+                        <input type="number" id="coldTariff" step="0.01" placeholder="Тариф" value="28.61">
+                        <div class="calc-result" id="coldResult">0 ₽</div>
+                    </div>
+                    <div class="service-block">
+                        <div class="service-header">🔥 Горячая вода</div>
+                        <input type="number" id="hotWaterCurrent" step="0.1" placeholder="Текущие показания">
+                        <input type="number" id="hotWaterPrev" step="0.1" placeholder="Предыдущие показания">
+                        <input type="number" id="hotTariff" step="0.01" placeholder="Тариф" value="28.61">
+                        <div class="calc-result" id="hotResult">0 ₽</div>
+                    </div>
+                    <div class="service-block">
+                        <div class="service-header">⚡ Электричество</div>
+                        <input type="number" id="elecCurrent" step="1" placeholder="Текущие показания">
+                        <input type="number" id="elecPrev" step="1" placeholder="Предыдущие показания">
+                        <input type="number" id="elecTariff" step="0.01" placeholder="Тариф" value="4.18">
+                        <div class="calc-result" id="elecResult">0 ₽</div>
+                    </div>
+                    <div class="service-block">
+                        <div class="service-header">💧 Водоотведение</div>
+                        <input type="number" id="drainVolume" step="0.1" placeholder="Объём (авто)" readonly
+                            style="background:#f4f7fa;">
+                        <input type="number" id="drainTariff" step="0.01" placeholder="Тариф" value="24.14">
+                        <div class="calc-result" id="drainResult">0 ₽</div>
+                    </div>
+                    <div class="total-utilities" id="totalUtilities">
+                        <strong>💰 Итого коммуналка:</strong> <span id="totalUtilitiesAmount">0 ₽</span>
+                    </div>
+                    <button id="addUtilitiesExpenseBtn" class="primary" style="background: #4a6f7c;">➕ Добавить расход
+                        (коммуналка)</button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="card">
+                    <div class="card-title">📜 История операций <span style="font-size:0.7rem;">(✏️ - редактировать, 🗑️
+                            - удалить)</span></div>
+                    <div id="transactionsList" class="transaction-list"></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-note">
+            ✨ Кликните ✏️ для корректировки любого платежа: можно изменить сумму, тип, счёт и описание
+        </div>
+    </div>
+
+    <!-- Модальное окно для редактирования -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Редактирование операции</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <label>Сумма (₽)</label>
+                    <input type="number" id="editAmount" step="any">
+                </div>
+                <div class="form-row">
+                    <label>Тип</label>
+                    <select id="editType">
+                        <option value="income">📈 Доход</option>
+                        <option value="expense">📉 Расход</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Счёт</label>
+                    <select id="editAccountId"></select>
+                </div>
+                <div class="form-row">
+                    <label>Описание</label>
+                    <input type="text" id="editDescription" placeholder="Описание операции">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveEditBtn" class="primary">💾 Сохранить изменения</button>
+                <button id="cancelEditBtn" style="background:#e2e8f0;">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -99,14 +99,14 @@ function loadUtilitiesState() {
         // Значения по умолчанию для демо
         coldCurrent.value = '';
         coldPrev.value = '';
-        coldTariff.value = '35.4';
+        coldTariff.value = '29.34';
         hotCurrent.value = '';
         hotPrev.value = '';
-        hotTariff.value = '98.2';
+        hotTariff.value = '30';
         elecCurrent.value = '';
         elecPrev.value = '';
         elecTariff.value = '5.8';
-        drainTariff.value = '23.7';
+        drainTariff.value = '23.75';
     }
 }
 
